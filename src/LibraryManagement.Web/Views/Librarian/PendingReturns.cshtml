@@ -1,0 +1,103 @@
+﻿@model List<LibraryManagement.Application.Queries.Loans.PendingReturnDto>
+@{
+    ViewData["Title"] = "Vraćanja na čekanju";
+}
+
+<div class="container mt-4">
+    <h2>📦 Vraćanja knjiga na čekanju</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            📭 Nema vraćanja na čekanju.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p class="text-muted">Ukupno vraćanja: <strong>@Model.Count</strong></p>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Korisnik</th>
+                                <th>Pozajmljeno</th>
+                                <th>Rok</th>
+                                <th>Vraćeno</th>
+                                <th>Status</th>
+                                <th>Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ret in Model)
+                            {
+                                <tr class="@(ret.IsOverdue ? "table-warning" : "")">
+                                    <td>
+                                        <strong>@ret.BookTitle</strong><br>
+                                        <small class="text-muted">@ret.BookAuthor</small>
+                                    </td>
+                                    <td>
+                                        <strong>@ret.UserName</strong><br>
+                                        <small class="text-muted">@ret.UserEmail</small>
+                                    </td>
+                                    <td>@ret.BorrowDate.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        @if (ret.DueDate.HasValue)
+                                        {
+                                            @ret.DueDate.Value.ToString("dd.MM.yyyy")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                    <td>@ret.ReturnDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        @if (ret.IsOverdue)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                ⚠️ Zakašnjelo (@ret.DaysOverdue dana)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">✅ Na vreme</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <form asp-action="ConfirmReturn" method="post" class="d-inline">
+                                            <input type="hidden" name="loanId" value="@ret.LoanId" />
+                                            <button type="submit" class="btn btn-primary btn-sm"
+                                                    onclick="return confirm('Da li ste sigurni da želite da potvrdite vraćanje?')">
+                                                ✅ Potvrdi
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

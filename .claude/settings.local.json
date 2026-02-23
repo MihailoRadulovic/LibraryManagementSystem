@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet add:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run:*)",
+      "WebFetch(domain:ethereal.email)",
+      "Bash(dotnet tool install:*)",
+      "Bash(smtp4dev:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(cmd //c \"taskkill /PID 13752 /F\")",
+      "Bash(cmd //c \"taskkill /PID 14432 /F\")"
+    ]
+  }
+}

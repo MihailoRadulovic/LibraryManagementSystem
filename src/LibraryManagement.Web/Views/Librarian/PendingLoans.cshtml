@@ -1,0 +1,89 @@
+﻿@model List<LibraryManagement.Application.Queries.Loans.PendingLoanDto>
+@{
+    ViewData["Title"] = "Zahtevi za pozajmice";
+}
+
+<div class="container mt-4">
+    <h2>📋 Zahtevi za pozajmice na čekanju</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            📭 Nema zahteva za pozajmice na čekanju.
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p class="text-muted">Ukupno zahteva: <strong>@Model.Count</strong></p>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Korisnik</th>
+                                <th>Datum zahteva</th>
+                                <th>Akcije</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@loan.BookTitle</strong><br>
+                                        <small class="text-muted">@loan.BookAuthor</small>
+                                    </td>
+                                    <td>
+                                        <strong>@loan.UserName</strong><br>
+                                        <small class="text-muted">@loan.UserEmail</small>
+                                    </td>
+                                    <td>
+                                        @loan.RequestDate.ToString("dd.MM.yyyy HH:mm")
+                                    </td>
+                                    <td>
+                                        <form asp-action="ApproveLoan" method="post" class="d-inline">
+                                            <input type="hidden" name="loanId" value="@loan.LoanId" />
+                                            <input type="hidden" name="approve" value="true" />
+                                            <button type="submit" class="btn btn-success btn-sm" 
+                                                    onclick="return confirm('Da li ste sigurni da želite da odobrite ovu pozajmicu?')">
+                                                ✅ Odobri
+                                            </button>
+                                        </form>
+                                        
+                                        <form asp-action="ApproveLoan" method="post" class="d-inline">
+                                            <input type="hidden" name="loanId" value="@loan.LoanId" />
+                                            <input type="hidden" name="approve" value="false" />
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Da li ste sigurni da želite da odbijete ovu pozajmicu?')">
+                                                ❌ Odbij
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

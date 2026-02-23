@@ -1,0 +1,58 @@
+@model IEnumerable<BookDto>
+@{
+    ViewData["Title"] = "Knjige";
+}
+
+<h2>Knjige</h2>
+
+<form method="get" class="mb-4">
+    <div class="row g-3">
+        <div class="col-md-5">
+            <input type="text" name="searchTerm" class="form-control" placeholder="Pretraži po naslovu, autoru ili ISBN" value="@ViewBag.SearchTerm" />
+        </div>
+        <div class="col-md-3">
+            <input type="text" name="genre" class="form-control" placeholder="Žanr" value="@ViewBag.Genre" />
+        </div>
+        <div class="col-md-2">
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="onlyAvailable" value="true" @(ViewBag.OnlyAvailable == true ? "checked" : "") />
+                <label class="form-check-label">Samo dostupne</label>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Pretraži</button>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Nema knjiga koje odgovaraju kriterijumima pretrage.</div>
+}
+else
+{
+    <div class="row">
+        @foreach (var book in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@book.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@book.Author</h6>
+                        <p class="card-text">
+                            <strong>ISBN:</strong> @book.ISBN<br />
+                            <strong>Žanr:</strong> @book.Genre<br />
+                            <strong>Godina:</strong> @book.PublicationYear<br />
+                            <strong>Dostupno:</strong> @book.AvailableCopies / @book.TotalCopies
+                            @if (book.ReservationCount > 0)
+                            {
+                                <br /><span class="text-warning">U redu čekanja: @book.ReservationCount</span>
+                            }
+                        </p>
+                        <a asp-action="Details" asp-route-id="@book.Id" class="btn btn-sm btn-primary">Detalji</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,235 @@
+﻿@model LibraryManagement.Application.Queries.Loans.UserLoansViewModel
+@{
+    ViewData["Title"] = "Moje pozajmice";
+}
+
+<div class="container mt-4">
+    <h2>📚 Moje pozajmice i zahtevi</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- PENDING REQUESTS - Zahtevi na čekanju -->
+    @if (Model.PendingRequests.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⏳ Zahtevi na čekanju (@Model.PendingRequests.Count)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Vaši zahtevi za pozajmicu koji čekaju odobrenje bibliotekara.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Datum zahteva</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model.PendingRequests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@loan.BookTitle</strong><br>
+                                        <small class="text-muted">@loan.BookAuthor</small>
+                                    </td>
+                                    <td>@loan.RequestDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        <span class="badge bg-@loan.StatusBadge">
+                                            @loan.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- APPROVED LOANS - Odobrene pozajmice -->
+    @if (Model.ApprovedLoans.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">✅ Odobrene pozajmice (@Model.ApprovedLoans.Count)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Pozajmice koje su odobrene i trenutno imate knjigu.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Odobreno</th>
+                                <th>Rok vraćanja</th>
+                                <th>Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model.ApprovedLoans)
+                            {
+                                var isOverdue = loan.DueDate.HasValue && DateTime.Now > loan.DueDate.Value;
+                                <tr class="@(isOverdue ? "table-warning" : "")">
+                                    <td>
+                                        <strong>@loan.BookTitle</strong><br>
+                                        <small class="text-muted">@loan.BookAuthor</small>
+                                    </td>
+                                    <td>
+                                        @if (loan.ApprovedDate.HasValue)
+                                        {
+                                            @loan.ApprovedDate.Value.ToString("dd.MM.yyyy")
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (loan.DueDate.HasValue)
+                                        {
+                                            @loan.DueDate.Value.ToString("dd.MM.yyyy")
+                                            @if (isOverdue)
+                                            {
+                                                <span class="badge bg-danger ms-2">Zakašnjelo!</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (loan.CanReturn)
+                                        {
+                                            <form asp-controller="Loans" asp-action="Return" method="post" class="d-inline">
+                                                <input type="hidden" name="loanId" value="@loan.LoanId" />
+                                                <button type="submit" class="btn btn-primary btn-sm"
+                                                        onclick="return confirm('Da li ste sigurni da želite da vratite knjigu?')">
+                                                    📦 Vrati knjigu
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- REJECTED REQUESTS - Odbijeni zahtevi -->
+    @if (Model.RejectedRequests.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">❌ Odbijeni zahtevi (@Model.RejectedRequests.Count)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Zahtevi koje je bibliotekar odbio.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Datum zahteva</th>
+                                <th>Odbijeno</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model.RejectedRequests)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@loan.BookTitle</strong><br>
+                                        <small class="text-muted">@loan.BookAuthor</small>
+                                    </td>
+                                    <td>@loan.RequestDate.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        @if (loan.ApprovedDate.HasValue)
+                                        {
+                                            @loan.ApprovedDate.Value.ToString("dd.MM.yyyy")
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- RETURNED LOANS - Vraćene pozajmice -->
+    @if (Model.ReturnedLoans.Any())
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">📚 Istorija vraćanja (@Model.ReturnedLoans.Count)</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Knjige koje ste vratili.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Knjiga</th>
+                                <th>Pozajmljeno</th>
+                                <th>Vraćeno</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var loan in Model.ReturnedLoans)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@loan.BookTitle</strong><br>
+                                        <small class="text-muted">@loan.BookAuthor</small>
+                                    </td>
+                                    <td>@loan.RequestDate.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        @if (loan.ReturnDate.HasValue)
+                                        {
+                                            @loan.ReturnDate.Value.ToString("dd.MM.yyyy")
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@loan.StatusBadge">
+                                            @loan.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- EMPTY STATE -->
+    @if (!Model.PendingRequests.Any() && !Model.ApprovedLoans.Any() && 
+         !Model.RejectedRequests.Any() && !Model.ReturnedLoans.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <h4 class="text-muted">📭 Nemate nijednu pozajmicu ili zahtev</h4>
+                <p class="text-muted">Posetite stranicu sa knjigama i zatražite pozajmicu!</p>
+                <a asp-controller="Books" asp-action="Index" class="btn btn-primary mt-3">
+                    📚 Pregledaj knjige
+                </a>
+            </div>
+        </div>
+    }
+</div>

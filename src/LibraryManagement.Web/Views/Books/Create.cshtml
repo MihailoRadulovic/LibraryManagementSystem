@@ -1,0 +1,92 @@
+﻿@model LibraryManagement.Application.Commands.Books.CreateBookCommand
+@{
+    ViewData["Title"] = "Dodaj novu knjigu";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Naslov *</label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="Author" class="form-label">Autor *</label>
+                <input asp-for="Author" class="form-control" />
+                <span asp-validation-for="Author" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="ISBN" class="form-label">ISBN *</label>
+                <input asp-for="ISBN" class="form-control" placeholder="13 cifara, npr: 9788652114764" />
+                <span asp-validation-for="ISBN" class="text-danger"></span>
+                <small class="form-text text-muted">Unesite 10 ili 13 cifara bez razmaka i crtica</small>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Publisher" class="form-label">Izdavač</label>
+                    <input asp-for="Publisher" class="form-control" />
+                    <span asp-validation-for="Publisher" class="text-danger"></span>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PublicationYear" class="form-label">Godina izdanja *</label>
+                    <input asp-for="PublicationYear" type="number" class="form-control" min="1000" max="2025" />
+                    <span asp-validation-for="PublicationYear" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="Genre" class="form-label">Žanr</label>
+                <input asp-for="Genre" class="form-control" placeholder="npr: Roman, Naučna fantastika, Istorija..." />
+                <span asp-validation-for="Genre" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Opis</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="TotalCopies" class="form-label">Broj primeraka *</label>
+                <input asp-for="TotalCopies" type="number" class="form-control" min="1" max="1000" value="1" />
+                <span asp-validation-for="TotalCopies" class="text-danger"></span>
+                <small class="form-text text-muted">Unesite koliko primeraka ove knjige želite da dodate u fond</small>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Dodaj knjigu</button>
+                <a asp-action="Index" class="btn btn-secondary">Otkaži</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Uputstvo</h5>
+                <p class="card-text">
+                    Popunite formu da biste dodali novu knjigu u bibliotečki fond.
+                </p>
+                <ul class="small">
+                    <li>Sva polja označena sa * su obavezna</li>
+                    <li>ISBN mora imati tačno 10 ili 13 cifara</li>
+                    <li>Godina izdanja mora biti između 1000 i 2025</li>
+                    <li>Broj primeraka određuje koliko fizičkih knjiga dodajete</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

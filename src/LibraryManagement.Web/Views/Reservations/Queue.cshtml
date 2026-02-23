@@ -1,0 +1,279 @@
+﻿@model IEnumerable<LibraryManagement.Application.DTOs.ReservationDto>
+@{
+    ViewData["Title"] = "Red čekanja";
+    var bookTitle = ViewData["BookTitle"] as string;
+    var bookAuthor = ViewData["BookAuthor"] as string;
+    var bookId = ViewData["BookId"] as int?;
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Books" asp-action="Index">Knjige</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Books" asp-action="Details" asp-route-id="@bookId">@bookTitle</a></li>
+                    <li class="breadcrumb-item active">Red čekanja</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+                    <h2 class="mb-2">📋 Red čekanja</h2>
+                    <h4 class="mb-1">@bookTitle</h4>
+                    <p class="mb-0"><em>@bookAuthor</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <h5>✅ Nema rezervacija u redu čekanja</h5>
+            <p class="mb-0">Trenutno nema korisnika koji čekaju u redu za ovu knjigu. Svi primerci su dostupni ili trenutno niko nije zainteresovan.</p>
+        </div>
+        <div class="mt-3">
+            <a asp-controller="Books" asp-action="Details" asp-route-id="@bookId" class="btn btn-secondary">
+                ← Nazad na detalje knjige
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <strong>ℹ️ Napomena:</strong> Red čekanja funkcioniše po FIFO principu (First In, First Out) - ko prvi rezerviše, prvi dobija knjigu kada postane dostupna.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width: 80px;" class="text-center">Pozicija</th>
+                        <th>Datum rezervacije</th>
+                        <th>Status</th>
+                        <th>Procenjeno vreme dostupnosti</th>
+                        <th style="width: 150px;">Rok za preuzimanje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reservation in Model.OrderBy(r => r.QueuePosition))
+                    {
+                        <tr class="@(reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready ? "table-success" : "")">
+                            <td class="text-center">
+                                @if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending)
+                                {
+                                    <span class="badge bg-primary" style="font-size: 1.2rem; padding: 8px 15px;">
+                                        #@reservation.QueuePosition
+                                    </span>
+                                }
+                                else if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                                {
+                                    <span class="badge bg-success" style="font-size: 1.1rem; padding: 8px 12px;">
+                                        ✓ Spremno
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <strong>@reservation.ReservationDate.ToString("dd.MM.yyyy HH:mm")</strong>
+                                <br />
+                                <small class="text-muted">
+                                    @{
+                                        var daysAgo = (DateTime.Now - reservation.ReservationDate).Days;
+                                        if (daysAgo == 0)
+                                        {
+                                            var hoursAgo = (DateTime.Now - reservation.ReservationDate).Hours;
+                                            if (hoursAgo == 0)
+                                            {
+                                                <span class="badge bg-info">Upravo rezervisano</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Pre @hoursAgo @(hoursAgo == 1 ? "sat" : hoursAgo < 5 ? "sata" : "sati")</span>
+                                            }
+                                        }
+                                        else if (daysAgo == 1)
+                                        {
+                                            <span>Juče</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Pre @daysAgo @(daysAgo < 5 ? "dana" : "dana")</span>
+                                        }
+                                    }
+                                </small>
+                            </td>
+                            <td>
+                                @switch (reservation.Status)
+                                {
+                                    case LibraryManagement.Domain.Enums.ReservationStatus.Pending:
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.95rem;">
+                                            ⏳ Na čekanju
+                                        </span>
+                                        break;
+                                    case LibraryManagement.Domain.Enums.ReservationStatus.Ready:
+                                        <span class="badge bg-success" style="font-size: 0.95rem;">
+                                            ✅ Spremno za preuzimanje
+                                        </span>
+                                        break;
+                                    case LibraryManagement.Domain.Enums.ReservationStatus.PickedUp:
+                                        <span class="badge bg-info" style="font-size: 0.95rem;">
+                                            📚 Preuzeto
+                                        </span>
+                                        break;
+                                    case LibraryManagement.Domain.Enums.ReservationStatus.Expired:
+                                        <span class="badge bg-danger" style="font-size: 0.95rem;">
+                                            ⏱️ Isteklo
+                                        </span>
+                                        break;
+                                    case LibraryManagement.Domain.Enums.ReservationStatus.Cancelled:
+                                        <span class="badge bg-secondary" style="font-size: 0.95rem;">
+                                            ❌ Otkazano
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                @if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending)
+                                {
+                                    var estimatedDays = reservation.QueuePosition * 14;
+                                    if (estimatedDays > 0)
+                                    {
+                                        var estimatedDate = DateTime.Now.AddDays(estimatedDays);
+                                        <span class="text-primary">
+                                            <strong>~@estimatedDays @(estimatedDays < 5 ? "dana" : "dana")</strong>
+                                        </span>
+                                        <br />
+                                        <small class="text-muted">
+                                            (Procenjeno: @estimatedDate.ToString("dd.MM.yyyy"))
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success"><strong>Uskoro!</strong></span>
+                                    }
+                                }
+                                else if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                                {
+                                    <span class="text-success">
+                                        <strong>✓ Dostupno sada!</strong>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (reservation.ExpirationDate.HasValue && reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                                {
+                                    var timeLeft = reservation.ExpirationDate.Value - DateTime.Now;
+                                    if (timeLeft.TotalHours > 0)
+                                    {
+                                        <span class="text-success">
+                                            <strong>@reservation.ExpirationDate.Value.ToString("dd.MM.yyyy")</strong>
+                                            <br />
+                                            <small>
+                                                @if (timeLeft.Days > 0)
+                                                {
+                                                    <span>(@timeLeft.Days @(timeLeft.Days == 1 ? "dan" : timeLeft.Days < 5 ? "dana" : "dana"), @timeLeft.Hours @(timeLeft.Hours == 1 ? "sat" : timeLeft.Hours < 5 ? "sata" : "sati"))</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-warning">(@timeLeft.Hours @(timeLeft.Hours == 1 ? "sat" : timeLeft.Hours < 5 ? "sata" : "sati"))</span>
+                                                }
+                                            </small>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger"><strong>⏰ Isteklo!</strong></span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">📊 Statistika reda</h5>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <strong>Ukupno u redu:</strong> 
+                                <span class="badge bg-primary">@Model.Count(r => r.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending || r.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Na čekanju:</strong> 
+                                <span class="badge bg-warning text-dark">@Model.Count(r => r.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending)</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Spremno:</strong> 
+                                <span class="badge bg-success">@Model.Count(r => r.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">ℹ️ Kako funkcioniše?</h5>
+                        <ul class="small mb-0">
+                            <li><strong>FIFO:</strong> Ko prvi rezerviše, prvi dobija</li>
+                            <li><strong>Automatsko:</strong> Sistem vas obaveštava kad je spremno</li>
+                            <li><strong>Rok:</strong> 3 dana za preuzimanje</li>
+                            <li><strong>Procena:</strong> 14 dana po poziciji u redu</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a asp-controller="Books" asp-action="Details" asp-route-id="@bookId" class="btn btn-secondary btn-lg">
+                ← Nazad na knjigu
+            </a>
+            <a asp-controller="Reservations" asp-action="Index" class="btn btn-primary btn-lg">
+                📋 Moje rezervacije
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    .table-success {
+        background-color: #d4edda !important;
+    }
+    
+    .breadcrumb {
+        background-color: #f8f9fa;
+        padding: 10px 15px;
+        border-radius: 5px;
+    }
+    
+    .badge {
+        font-weight: 600;
+    }
+    
+    .card {
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>

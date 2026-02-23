@@ -1,0 +1,130 @@
+﻿@model IEnumerable<LibraryManagement.Application.DTOs.ReservationDto>
+@{
+    ViewData["Title"] = "Moje rezervacije";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <p>Trenutno nemate aktivnih rezervacija.</p>
+        <a asp-controller="Books" asp-action="Index" class="btn btn-primary">Pregledaj knjige</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Knjiga</th>
+                    <th>Datum rezervacije</th>
+                    <th>Status</th>
+                    <th>Pozicija u redu</th>
+                    <th>Rok za preuzimanje</th>
+                    <th>Akcija</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model.OrderByDescending(r => r.ReservationDate))
+                {
+                    <tr>
+                        <td>
+                            <strong>@reservation.BookTitle</strong><br />
+                            <small class="text-muted">@reservation.BookAuthor</small>
+                        </td>
+                        <td>@reservation.ReservationDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>
+                            @switch (reservation.Status)
+                            {
+                                case LibraryManagement.Domain.Enums.ReservationStatus.Pending:
+                                    <span class="badge bg-warning text-dark">Na čekanju</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.ReservationStatus.Ready:
+                                    <span class="badge bg-success">Spremno za preuzimanje!</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.ReservationStatus.PickedUp:
+                                    <span class="badge bg-info">Preuzeto</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.ReservationStatus.Expired:
+                                    <span class="badge bg-danger">Isteklo</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.ReservationStatus.Cancelled:
+                                    <span class="badge bg-secondary">Otkazano</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending)
+                            {
+                                <span class="badge bg-primary">Pozicija: @reservation.QueuePosition</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (reservation.ExpirationDate.HasValue && reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                            {
+                                var timeLeft = reservation.ExpirationDate.Value - DateTime.Now;
+                                if (timeLeft.TotalHours > 0)
+                                {
+                                    <span class="text-success">
+                                        @reservation.ExpirationDate.Value.ToString("dd.MM.yyyy HH:mm")<br />
+                                        <small>(@timeLeft.Days dana, @timeLeft.Hours sati)</small>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger">Isteklo!</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Pending || 
+                                 reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                            {
+                                <form asp-action="Cancel" asp-route-id="@reservation.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Da li ste sigurni da želite da otkažete rezervaciju?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-danger">Otkaži</button>
+                                </form>
+                            }
+    
+                            @if (reservation.Status == LibraryManagement.Domain.Enums.ReservationStatus.Ready)
+                            {
+                                <form asp-action="Pickup" method="post" class="d-inline"
+                                      onsubmit="return confirm('Da li želite da pošaljete zahtev za pozajmicu ove knjige?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reservationId" value="@reservation.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">📤 Pošalji zahtev</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-3">
+        <h5>Legenda statusa:</h5>
+        <ul>
+            <li><span class="badge bg-warning text-dark">Na čekanju</span> - Čekate u redu, neko drugi trenutno pozajmljuje knjigu</li>
+            <li><span class="badge bg-success">Spremno</span> - Knjiga je dostupna! Imate 3 dana da je preuzmete u biblioteci</li>
+            <li><span class="badge bg-info">Preuzeto</span> - Poslali ste zahtev za pozajmicu, čeka se odobrenje bibliotekara</li>
+            <li><span class="badge bg-danger">Isteklo</span> - Rok za preuzimanje je istekao, rezervacija je automatski otkazana</li>
+            <li><span class="badge bg-secondary">Otkazano</span> - Otkazali ste rezervaciju</li>
+        </ul>
+    </div>
+}
+
+<div class="mt-3">
+    <a asp-controller="Books" asp-action="Index" class="btn btn-secondary">Nazad na knjige</a>
+</div>

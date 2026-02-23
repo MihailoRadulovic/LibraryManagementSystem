@@ -1,0 +1,84 @@
+@model IEnumerable<LoanDto>
+@{
+    ViewData["Title"] = "Moje pozajmice";
+}
+
+<h2>Moje pozajmice</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Nemate aktivnih pozajmica.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Knjiga</th>
+                    <th>Datum pozajmice</th>
+                    <th>Rok vraćanja</th>
+                    <th>Status</th>
+                    <th>Kazna</th>
+                    <th>Akcija</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@loan.BookTitle</strong><br />
+                            <small class="text-muted">@loan.BookAuthor</small>
+                        </td>
+                        <td>@loan.LoanDate.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            @(loan.DueDate?.ToString("dd.MM.yyyy") ?? "-")
+                            @if (loan.DaysOverdue > 0)
+                            {
+                                <br /><span class="badge bg-danger">Kašnjenje: @loan.DaysOverdue dana</span>
+                            }
+                        </td>
+                        <td>
+                            @switch (loan.Status)
+                            {
+                                case LibraryManagement.Domain.Enums.LoanStatus.Active:
+                                    <span class="badge bg-primary">Aktivna</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.LoanStatus.Returned:
+                                    <span class="badge bg-success">Vraćena</span>
+                                    break;
+                                case LibraryManagement.Domain.Enums.LoanStatus.Overdue:
+                                    <span class="badge bg-danger">Prekoračena</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @if (loan.FineAmount > 0)
+                            {
+                                <span class="text-danger">@loan.FineAmount.Value.ToString("C")</span>
+                                if (!loan.FinePaid)
+                                {
+                                    <br /><small class="text-danger">Neplaćeno</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (loan.Status == LibraryManagement.Domain.Enums.LoanStatus.Active)
+                            {
+                                <form asp-action="Return" asp-route-loanId="@loan.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-success">Vrati</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
