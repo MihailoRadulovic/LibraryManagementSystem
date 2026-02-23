@@ -1,7 +1,7 @@
 # Sistem za upravljanje bibliotekom
 
 **Student:** Radulović Mihailo, 2022/0542  
-**Projektni zadatak** za kurs Objektno-orijentisane tehnologije
+**Projektni zadatak** za ispit Napredne .Net tehnologije
 
 ---
 
